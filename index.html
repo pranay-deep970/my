@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Guessing Game</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6750A4;
+            --surface-color: #F3EDF7;
+            --error-color: #B3261E;
+            --success-color: #4CAF50;
+            --on-primary: #FFFFFF;
+            --on-surface: #1C1B1F;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: var(--surface-color);
+            color: var(--on-surface);
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        input, button {
+            margin: 10px;
+            padding: 5px;
+        }
+
+        .card {
+            border-radius: 16px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background-color: white;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .record-btn {
+            background-color: var(--primary-color);
+            color: var(--on-primary);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            transition: background-color 0.3s, transform 0.2s ease;
+        }
+
+        .record-btn:hover {
+            background-color: #5E4D9B;
+            transform: scale(1.05);
+        }
+
+        .record-btn.active {
+            background-color: var(--error-color);
+        }
+
+        .download-btn {
+            background-color: var(--success-color);
+            color: var(--on-primary);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            transition: background-color 0.3s, transform 0.2s ease;
+        }
+
+        .download-btn:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+
+        .dropdown {
+            margin: 1rem 0;
+        }
+
+        .dropdown select {
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            background-color: white;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .dropdown select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 8px rgba(103, 80, 164, 0.3);
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .gallery-item {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .gallery-item video {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .material-icons {
+            font-size: 1.5rem;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin: 1rem 0;
+        }
+
+        .stats-item {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stats-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .upgrade-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .upgrade-modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .video-container {
+            background-color: black; /* Black background for live preview */
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio (9 / 16 = 0.5625 or 56.25%) */
+        }
+
+        #videoPreview {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .countdown {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 1.2rem;
+        }
+
+        @media (min-width: 1024px) {
+            .container {
+                max-width: 1200px;
+                padding: 2rem;
+            }
+
+            .card {
+                max-width: 800px;
+                margin: 0 auto;
+            }
+
+            .video-container {
+                min-height: 400px;
+                max-width: 1280px; /* Max width for desktop */
+                margin: 0 auto;
+            }
+
+            .stats {
+                gap: 2rem;
+                padding: 1rem;
+            }
+
+            .stats-item {
+                flex: 1;
+                padding: 1.5rem;
+            }
+
+            .gallery {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 2rem;
+                padding: 2rem;
+            }
+
+            .gallery-item video {
+                height: 200px;
+            }
+
+            .controls {
+                display: flex;
+                gap: 1rem;
+                justify-content: center;
+            }
+
+            .record-btn, .download-btn {
+                min-width: 200px;
+                font-size: 1.1rem;
+            }
+        }
+
+        /* Fix button styles */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            color: #000;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* Fix modal positioning */
+        .upgrade-modal-content {
+            min-width: 400px;
+            position: relative;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+
+        /* Add loading state */
+        .loading {
+            position: relative;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .loading::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid #ccc;
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spinner 0.6s linear infinite;
+        }
+
+        @keyframes spinner {
+            to {transform: rotate(360deg);}
+        }
+
+        /* Hide upgrade button when pro */
+        .upgrade-btn.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card mt-5">
+                    <div class="card-body">
+                        <h2 class="card-title text-center mb-4">Screen Recorder</h2>
+                        <div class="video-container">
+                            <video id="videoPreview" class="card-img-top" autoplay muted></video>
+                            <div id="countdown" class="countdown" style="display: none;">00:00</div>
+                        </div>
+
+                        <div class="stats">
+                            <div class="stats-item">
+                                <h5>Resolution</h5>
+                                <p id="resolution">-</p>
+                            </div>
+                            <div class="stats-item">
+                                <h5>Frame Rate</h5>
+                                <p id="frameRate">-</p>
+                            </div>
+                            <div class="stats-item">
+                                <h5>Bitrate</h5>
+                                <p id="bitrate">-</p>
+                            </div>
+                        </div>
+
+                        <div class="dropdown">
+                            <label for="qualitySelect">Quality:</label>
+                            <select id="qualitySelect" onchange="updateSettings()">
+                                <option value="480p">480p</option>
+                                <option value="720p">720p</option>
+                                <option value="1080p" disabled>1080p (Pro)</option>
+                                <option value="2K" disabled>2K (Pro)</option>
+                                <option value="4K" disabled>4K (Pro)</option>
+                            </select>
+                        </div>
+
+                        <div class="dropdown">
+                            <label for="frameRateSelect">Frame Rate:</label>
+                            <select id="frameRateSelect" onchange="updateSettings()">
+                                <option value="30">30 FPS</option>
+                                <option value="60">60 FPS</option>
+                                <option value="90" disabled>90 FPS (Pro)</option>
+                                <option value="120" disabled>120 FPS (Pro)</option>
+                                <option value="144" disabled>144 FPS (Pro)</option>
+                            </select>
+                        </div>
+
+                        <div class="dropdown">
+                            <label for="bitrateSelect">Bitrate:</label>
+                            <select id="bitrateSelect" onchange="updateSettings()">
+                                <option value="500">500 kbps</option>
+                                <option value="1000">1000 kbps</option>
+                                <option value="2000" disabled>2000 kbps (Pro)</option>
+                                <option value="4000" disabled>4000 kbps (Pro)</option>
+                                <option value="8000" disabled>8000 kbps (Pro)</option>
+                            </select>
+                        </div>
+
+                        <div class="controls mt-4">
+                            <div class="d-grid gap-2">
+                                <button class="record-btn" id="recordBtn">
+                                    <span class="material-icons">fiber_manual_record</span>
+                                    Start Recording
+                                </button>
+                                <button class="download-btn" id="downloadBtn" disabled>
+                                    <span class="material-icons">download</span>
+                                    Download
+                                </button>
+                                <button class="btn btn-warning upgrade-btn" id="upgradeBtn" onclick="showUpgradeModal()">
+                                    <span class="material-icons">upgrade</span>
+                                    Upgrade to Pro
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="gallery mt-5">
+                    <h3>Recorded Videos</h3>
+                    <div id="gallery" class="row"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upgrade Modal -->
+    <div class="upgrade-modal" id="upgradeModal">
+        <div class="upgrade-modal-content">
+            <h5>Upgrade to Pro</h5>
+            <p>Enter your license key to unlock Pro features:</p>
+            <input type="text" id="licenseKey" class="form-control" placeholder="Enter license key...">
+            <div class="mt-3">
+                <button class="btn btn-secondary" onclick="closeUpgradeModal()">Close</button>
+                <button class="btn btn-primary" onclick="checkLicenseKey()">Activate</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let mediaRecorder;
+        let recordedBlobs = [];
+        let isRecording = false;
+        let isProUser = localStorage.getItem('pro') === 'true';
+        let currentSettings = {
+            quality: '480p',
+            frameRate: 30,
+            bitrate: 500
+        };
+        let countdownInterval;
+        let startTime;
+        let savedVideos = JSON.parse(localStorage.getItem('savedVideos')) || [];
+
+        // Check if user is already a Pro user
+        if (isProUser) {
+            enableProFeatures();
+        }
+
+        function updateSettings() {
+            const quality = document.getElementById('qualitySelect').value;
+            const frameRate = parseInt(document.getElementById('frameRateSelect').value);
+            const bitrate = parseInt(document.getElementById('bitrateSelect').value);
+
+            if (!isProUser && (frameRate > 60 || bitrate > 1000 || quality !== '480p' && quality !== '720p')) {
+                showUpgradeModal();
+                return;
+            }
+
+            currentSettings = { quality, frameRate, bitrate };
+            updateStats();
+        }
+
+        function showUpgradeModal() {
+            document.getElementById('upgradeModal').style.display = 'flex';
+        }
+
+        function closeUpgradeModal() {
+            document.getElementById('upgradeModal').style.display = 'none';
+        }
+
+        function checkLicenseKey() {
+            const licenseKey = document.getElementById('licenseKey').value;
+            if (licenseKey === '123456') { // Upgrade key
+                localStorage.setItem('pro', 'true');
+                isProUser = true;
+                closeUpgradeModal();
+                enableProFeatures();
+                // Show success notification
+                const notification = document.createElement('div');
+                notification.className = 'alert alert-success';
+                notification.textContent = 'Pro features unlocked!';
+                document.querySelector('.card-body').prepend(notification);
+                // Remove notification after 3 seconds
+                setTimeout(() => notification.remove(), 3000);
+            } else {
+                alert('Invalid license key!');
+            }
+        }
+
+        function enableProFeatures() {
+            document.getElementById('qualitySelect').querySelectorAll('option').forEach(option => {
+                option.disabled = false;
+            });
+            document.getElementById('frameRateSelect').querySelectorAll('option').forEach(option => {
+                option.disabled = false;
+            });
+            document.getElementById('bitrateSelect').querySelectorAll('option').forEach(option => {
+                option.disabled = false;
+            });
+            // Hide upgrade button
+            document.getElementById('upgradeBtn').classList.add('hidden');
+        }
+
+        async function init() {
+            try {
+                const recordBtn = document.getElementById('recordBtn');
+                showLoading(recordBtn);
+                
+                const { quality, frameRate, bitrate } = currentSettings;
+                const constraints = {
+                    video: {
+                        mediaSource: 'screen',
+                        width: { ideal: getIdealWidth(quality) },
+                        height: { ideal: getIdealHeight(quality) },
+                        frameRate: { ideal: frameRate }
+                    }
+                };
+
+                const stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: constraints.video
+                });
+
+                document.getElementById('videoPreview').srcObject = stream;
+
+                if (mediaRecorder) {
+                    await mediaRecorder.requestStop();
+                }
+
+                recordedBlobs = [];
+                mediaRecorder = new MediaRecorder(stream);
+
+                mediaRecorder.ondataavailable = (event) => {
+                    recordedBlobs.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    createDownloadLink();
+                    updateGallery();
+                    updateStats();
+                    clearInterval(countdownInterval);
+                    document.getElementById('countdown').style.display = 'none';
+                };
+
+                mediaRecorder.start(100);
+                updateStats();
+
+                // Start countdown
+                startTime = Date.now();
+                document.getElementById('countdown').style.display = 'block';
+                countdownInterval = setInterval(updateCountdown, 1000);
+
+                hideLoading(recordBtn);
+            } catch (err) {
+                hideLoading(document.getElementById('recordBtn'));
+                console.error('Error accessing screen:', err);
+                alert('Failed to start recording: ' + err.message);
+            }
+        }
+
+        function updateCountdown() {
+            const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
+            const seconds = (elapsedTime % 60).toString().padStart(2, '0');
+            document.getElementById('countdown').textContent = `${minutes}:${seconds}`;
+        }
+
+        function createDownloadLink() {
+            const blob = new Blob(recordedBlobs, { type: 'video/webm' });
+            const downloadBtn = document.getElementById('downloadBtn');
+            downloadBtn.href = URL.createObjectURL(blob);
+            downloadBtn.download = 'recording.webm';
+            downloadBtn.disabled = false;
+        }
+
+        function updateGallery() {
+            const gallery = document.getElementById('gallery');
+            const blob = new Blob(recordedBlobs, { type: 'video/webm' });
+            
+            // Check file size before saving
+            if (blob.size > 5 * 1024 * 1024) { // 5MB limit
+                alert('Video is too large to store locally. Consider shorter recordings.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = function() {
+                const base64data = reader.result;
+                savedVideos.push({
+                    id: Date.now(),
+                    data: base64data,
+                    timestamp: new Date().toLocaleString()
+                });
+                
+                if (saveToLocalStorage('savedVideos', savedVideos)) {
+                    displaySavedVideos();
+                }
+            };
+        }
+
+        function displaySavedVideos() {
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = ''; // Clear existing content
+            
+            savedVideos.forEach(video => {
+                const item = document.createElement('div');
+                item.className = 'col-md-4 gallery-item';
+                
+                item.innerHTML = `
+                    <video controls>
+                        <source src="${video.data}" type="video/webm">
+                    </video>
+                    <div class="actions mt-2">
+                        <button class="btn btn-sm btn-success" onclick="downloadVideo('${video.data}')">
+                            <span class="material-icons">download</span>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteVideo(${video.id})">
+                            <span class="material-icons">delete</span>
+                        </button>
+                        <small class="d-block mt-1">${video.timestamp}</small>
+                    </div>
+                `;
+                
+                gallery.prepend(item);
+            });
+        }
+
+        function downloadVideo(url) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'recording.webm';
+            a.click();
+        }
+
+        function deleteVideo(videoId) {
+            savedVideos = savedVideos.filter(video => video.id !== videoId);
+            localStorage.setItem('savedVideos', JSON.stringify(savedVideos));
+            displaySavedVideos();
+        }
+
+        function getIdealWidth(quality) {
+            switch (quality) {
+                case '480p': return 640;
+                case '720p': return 1280;
+                case '1080p': return 1920;
+                case '2K': return 2560;
+                case '4K': return 3840;
+                default: return 1280;
+            }
+        }
+
+        function getIdealHeight(quality) {
+            switch (quality) {
+                case '480p': return 480;
+                case '720p': return 720;
+                case '1080p': return 1080;
+                case '2K': return 1440;
+                case '4K': return 2160;
+                default: return 720;
+            }
+        }
+
+        function updateStats() {
+            const { quality, frameRate, bitrate } = currentSettings;
+            document.getElementById('resolution').textContent = `${getIdealWidth(quality)}x${getIdealHeight(quality)}`;
+            document.getElementById('frameRate').textContent = `${frameRate} FPS`;
+            document.getElementById('bitrate').textContent = `${bitrate} kbps`;
+        }
+
+        function showLoading(element) {
+            element.classList.add('loading');
+        }
+
+        function hideLoading(element) {
+            element.classList.remove('loading');
+        }
+
+        function saveToLocalStorage(key, data) {
+            try {
+                localStorage.setItem(key, JSON.stringify(data));
+            } catch (e) {
+                console.error('Storage failed:', e);
+                alert('Storage is full. Please delete some videos.');
+                return false;
+            }
+            return true;
+        }
+
+        document.getElementById('recordBtn').addEventListener('click', async () => {
+            if (!isRecording) {
+                // Start Recording
+                isRecording = true;
+                document.getElementById('recordBtn').classList.add('active');
+                document.getElementById('recordBtn').textContent = 'Stop Recording';
+                init();
+            } else {
+                // Stop Recording
+                isRecording = false;
+                document.getElementById('recordBtn').classList.remove('active');
+                document.getElementById('recordBtn').textContent = 'Start Recording';
+                mediaRecorder.requestStop(); // Stop the recording
+            }
+        });
+
+        // Initialize settings
+        updateSettings();
+        document.addEventListener('DOMContentLoaded', () => {
+            if (isProUser) {
+                document.getElementById('upgradeBtn').classList.add('hidden');
+            }
+            displaySavedVideos();
+        });
+    </script>
+</body>
+</html>
